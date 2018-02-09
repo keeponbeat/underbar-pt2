@@ -1,4 +1,4 @@
-const { each } = require('./underbar-pt1');
+const { each, reduce } = require('./underbar-pt1');
 
 /**
  * OBJECTS
@@ -19,14 +19,29 @@ const { each } = require('./underbar-pt1');
 //     bla: "even more stuff"
 //   }); // obj1 now contains key1, key2, key3 and bla
 const extend = function(obj) {
-  // Your code here
-  // Hint: remember that Array.from can convert an array-like object to handy-dandy array for you.
+  const args = Array.from(arguments);
+  let originalObj = args.shift();
+  args.forEach(obj => {
+    Object.keys(obj).forEach(key => {
+      originalObj[key] = obj[key];
+    });
+  });
+  return originalObj;
 };
 
 // Like extend, but doesn't ever overwrite a key that already
 // exists in obj
 const defaults = function(obj) {
-  // Your code here
+  const args = Array.from(arguments);
+  let originalObj = args.shift();
+  args.forEach(obj => {
+    Object.keys(obj).forEach(key => {
+      if (!(key in originalObj)) {
+        originalObj[key] = obj[key];
+      }
+    });
+  });
+  return originalObj;
 };
 
 
@@ -41,7 +56,17 @@ const defaults = function(obj) {
 // Return a function that can be called at most one time. Subsequent calls
 // should return the previously returned value.
 const once = function(func) {
-  // Hint: you're going to need to return another function that you create inside this function.
+  let alreadyCalled = false;
+  let result;
+  
+  return function() {  
+    if (!alreadyCalled) {
+      result = func.apply(this, arguments);
+      alreadyCalled = true;
+    }
+    return result;
+  };
+
 };
 
 // Memorize an expensive function's results by storing them. You may assume
@@ -53,8 +78,16 @@ const once = function(func) {
 // already computed the result for the given argument and return that value
 // instead if possible.
 const memoize = function(func) {
-  // Hint: look up Function.apply
-  // Your code here
+  const memoizedFunc = function( /* keep things flexible with no explicit parameters, but that's ok in JavaScript */ ) {
+    const cache = memoizedFunc.cache;
+    const key = JSON.stringify(arguments);
+    if (!cache[key]) {
+      cache[key] = func.apply(this, arguments);
+    }
+    return cache[key];
+  };
+  memoizedFunc.cache = {};
+  return memoizedFunc;
 };
 
 // Delays a function for the given number of milliseconds, and then calls
@@ -64,8 +97,10 @@ const memoize = function(func) {
 // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
 // call someFunction('a', 'b') after 500ms
 const delay = function(func, wait) {
-  // Hint: delay things with the global function setTimeout()
-  // Hint: look up Function.apply
+  const args = Array.prototype.slice.call(arguments, 2);
+  setTimeout(function() {
+    return func.apply(null, args);
+  }, wait);
 };
 
 // Randomizes the order of an array's contents.
@@ -74,8 +109,20 @@ const delay = function(func, wait) {
 // input array. For a tip on how to make a copy of an array, see:
 // http://mdn.io/Array.prototype.slice
 const shuffle = function(arr) {
-  // Hint: See http://bost.ocks.org/mike/shuffle/ for an in-depth explanation of the
-  // Fisher-Yates Shuffle
+  let retArr = [].concat(arr);
+  let n = retArr.length;
+  let t;
+  let i;
+  // While there remain elements to shuffle…
+  while (n) {
+    // Pick a remaining element…
+    i = Math.floor(Math.random() * n--);
+    // And swap it with the current element.
+    t = retArr[n];
+    retArr[n] = retArr[i];
+    retArr[i] = t;
+  }
+  return retArr;
 };
 
 module.exports = {
